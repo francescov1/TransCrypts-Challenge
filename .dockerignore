@@ -1,0 +1,5 @@
+.git
+npm-debug.log
+README.md
+.eslintrc.json
+.gitignore
