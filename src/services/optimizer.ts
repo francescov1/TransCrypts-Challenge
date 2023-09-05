@@ -1,6 +1,28 @@
 import { Job } from '../types';
 
-// TODO: Cleanup this func
+interface PriorityRoomsDict {
+  [room: number]: boolean
+}
+
+/**
+ * This method takes a single batch of rooms to clean and splits it into the priority rooms and non-priority rooms.
+ * @param batch batch to split up
+ * @param priorityRoomsDict a dictionary of priority rooms for quick lookup
+ */
+const splitBatchIntoSubbatches = (batch: number[], priorityRoomsDict: PriorityRoomsDict): { priorityRooms: number[], nonPriorityRooms: number[] } => {
+  const uniqueBatch = [...new Set(batch)];
+  const { priorityRooms, nonPriorityRooms } = uniqueBatch.reduce((acc, room) => {
+    if (room in priorityRoomsDict) {
+      acc.priorityRooms.push(room)
+    }
+    else {
+      acc.nonPriorityRooms.push(room)
+    }
+    return acc
+  }, { priorityRooms: [], nonPriorityRooms: [] } as { priorityRooms: number[], nonPriorityRooms: number[] })
+
+  return { priorityRooms, nonPriorityRooms }
+}
 
 /**
  * This method takes optimizes the order of rooms within each batch, but does not change the order of batches themselves. The order of batches is determined at execution time.
@@ -10,23 +32,15 @@ import { Job } from '../types';
  * @returns The optimized cleaning batches
  */
 export const optimizeBatches = (rawBatches: number[][], priorityRooms: number[]): Job['cleaningBatches'] => {
-  const priorityRoomsObj: { [room: number]: boolean } = {}
+  // A dictionary of priority rooms for quick lookup
+  const priorityRoomsDict: { [room: number]: boolean } = {}
   priorityRooms.forEach(room => {
-    priorityRoomsObj[room] = true
+    priorityRoomsDict[room] = true
   })
 
-  // This sorts rooms by ascending order, but puts priority rooms first
+  // This sorts rooms by ascending or descending order, depending on which order results in the smallest diff between the last priority room and the first non-priority room.
   const optimizedCleaningBatches = rawBatches.map(batch => {
-    const uniqueBatch = [...new Set(batch)];
-    let { priorityRooms, nonPriorityRooms } = uniqueBatch.reduce((acc, room) => {
-      if (room in priorityRoomsObj) {
-        acc.priorityRooms.push(room)
-      }
-      else {
-        acc.nonPriorityRooms.push(room)
-      }
-      return acc
-    }, { priorityRooms: [], nonPriorityRooms: [] } as { priorityRooms: number[], nonPriorityRooms: number[] })
+    let { priorityRooms, nonPriorityRooms } = splitBatchIntoSubbatches(batch, priorityRoomsDict)
 
     const minPriority = Math.min(...priorityRooms)
     const maxPriority = Math.max(...priorityRooms)
@@ -43,7 +57,8 @@ export const optimizeBatches = (rawBatches: number[][], priorityRooms: number[])
     const minToMin = Math.abs(minPriority - minNonPriority)
     const minToMax = Math.abs(minPriority - maxNonPriority)
 
-    // TODO: See if this can be cleaned up
+    // Not too happy with the structure of this if/else block, but there wasn't any great ways to set this up.
+    // Essentially we need to find the smallest value of the 4 diffs above and sort the lists accordingly.
     if (maxToMin <= maxToMax && maxToMin <= minToMin && maxToMin <= minToMax) {
       // If max priority to min non-priority is the smallest diff, sort both in ascending order
       priorityRooms.sort((a, b) => a - b)
@@ -73,4 +88,28 @@ export const optimizeBatches = (rawBatches: number[][], priorityRooms: number[])
   })
 
   return optimizedCleaningBatches;
+}
+
+/**
+ * This method returns the index of the nearest batch to process from a given room.
+ * 
+ * @param fromRoom Starting room
+ * @param remainingBatches Array of remaining batches
+ * @returns Index of nearest batch
+ */
+export const getNearestBatchIndex = (fromRoom: number, remainingBatches: Job['cleaningBatches']): number => {
+  let nearestBatchIndex = -1
+  let nearestBatchDistance = Infinity
+
+  // Simple logic here, simply check the distance from the starting room to the first room in each batch
+  remainingBatches.forEach((batch, i) => {
+    const batchRooms = batch.allRooms
+    const distance = Math.abs(batchRooms[0] - fromRoom)
+    if (distance < nearestBatchDistance) {
+      nearestBatchDistance = distance
+      nearestBatchIndex = i
+    }
+  })
+
+  return nearestBatchIndex
 }

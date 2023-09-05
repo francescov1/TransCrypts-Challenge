@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import { Job } from '../types'
 import * as state from "./state"
+import * as optimizerService from "./optimizer"
 
 /**
  * This method executes a cleaning job in state and returns the completed job.
@@ -20,7 +21,7 @@ export const performClean = (jobId: string): Job => {
   let numRoomsPassedWithoutCleaning = 0
 
   while(remainingBatches.length > 0) {
-    const nearestBatchIndex = getNearestBatchIndex(currentRoom, remainingBatches)
+    const nearestBatchIndex = optimizerService.getNearestBatchIndex(currentRoom, remainingBatches)
     const nearestBatchRooms = remainingBatches[nearestBatchIndex].allRooms
     remainingBatches.splice(nearestBatchIndex, 1)
     numRoomsPassedWithoutCleaning += getNumRoomsPassedWithoutCleaning([currentRoom, ...nearestBatchRooms])
@@ -30,30 +31,6 @@ export const performClean = (jobId: string): Job => {
 
   const completedJob = state.completeJob(jobId, { pathTaken, numRoomsPassedWithoutCleaning });
   return completedJob
-}
-
-/**
- * This method returns the index of the nearest batch to process from a given room.
- * 
- * @param fromRoom Starting room
- * @param remainingBatches Array of remaining batches
- * @returns Index of nearest batch
- */
-function getNearestBatchIndex(fromRoom: number, remainingBatches: Job['cleaningBatches']): number {
-  let nearestBatchIndex = -1
-  let nearestBatchDistance = Infinity
-
-  // Simple logic here, simply check the distance from the starting room to the first room in each batch
-  remainingBatches.forEach((batch, i) => {
-    const batchRooms = batch.allRooms
-    const distance = Math.abs(batchRooms[0] - fromRoom)
-    if (distance < nearestBatchDistance) {
-      nearestBatchDistance = distance
-      nearestBatchIndex = i
-    }
-  })
-
-  return nearestBatchIndex
 }
 
 /**
