@@ -1,12 +1,5 @@
 # TransCrypts Take Home Challenge
 
-## Architecture
-- To mimic a microservice architecture, I split up the application into 3 main services:
-   - State: responsible for keeping track of the current cleaning jobs. Essentially the database of the application.
-   - Optimizer: responsible for optimizing the order of rooms within a batch, and the order of batches.
-   - Cleaner: responsible for doing the cleaning. Traverses through the rooms, keeps track of metrics and saves them to state.
-- We could have made each of these into their own microservice, but this felt like overkill for the purpose of this small application. At the end I explain how this could've been achieved.
-
 ## How to use
 
 The service is hosted at https://transcrypts-challenge-jggtxw64pq-uc.a.run.app on a GCP Cloud Run instance. You can also run it locally by installing dependencies `npm install` and starting with `npm start`.
@@ -71,6 +64,13 @@ Executes a given cleaning job.
     "numRoomsCleaned": 15
 }
 ```
+
+## Architecture
+- To mimic a microservice architecture, I split up the application into 3 main services:
+   - State: responsible for keeping track of the current cleaning jobs. Essentially the database of the application.
+   - Optimizer: responsible for optimizing the order of rooms within a batch, and the order of batches.
+   - Cleaner: responsible for doing the cleaning. Traverses through the rooms, keeps track of metrics and saves them to state.
+- We could have made each of these into their own microservice, but this felt like overkill for the purpose of this small application. At the end I explain how this could've been achieved.
 
 ## Strategy Explanation
 - The strategy here is to first optimize the order of rooms within each batch, then optimize the order of batches.
