@@ -90,7 +90,7 @@ The main area of improvement is related to the algorithm used. The drawbacks of 
 
 There's lots of variables involved, so it would require a complex algorithm to be able to optimize across the entire space of variables. A variation of Dijsktra's Algorithm or a Traveling Salesman Problem algorithm could be used.
 
-I should also mention that the brute force solution is likely pretty effective as well, and within small boundary conditions would not be too inefficient. The idea here is to still use the system of sub-batches with priority & non-priority rooms, but to explore the entire space of combintations to find the most optimal (ie try all combintations of ascending and descending order sub-batches, and all combinations of order of batches). We could add memoization to this strategy to improve its efficiency.
+I should also mention that the brute force solution is likely pretty effective as well, and within small boundary conditions would not be too slow. The idea here is to still use the system of sub-batches with priority & non-priority rooms, but to explore the entire space of combintations to find the most optimal (ie try all combintations of ascending and descending order sub-batches, and all combinations of order of batches). We could add memoization to this strategy to improve its efficiency.
 
 A few other small improvements that should be made
 - Remove duplicates across all batches, since there's likely no need to clean the same room twice.
